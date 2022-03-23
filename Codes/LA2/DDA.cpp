@@ -1,55 +1,60 @@
-#include<GL/glut.h>
-#include<math.h>
-void display()
-{
-  glClear(GL_COLOR_BUFFER_BIT);
-  glColor3f(0.0, 1.0, 1.0);
-  int x0, y0, x1, y1, dx, dy, p, x, y;
-  glBegin(GL_POINTS);
-  x0 = 0;
-  x1 = 400;
-  y0 = 250;
-  y1 = 100;
-  dx = x1 - x0;
-  dy = y1 - y0;
-  x = x0;
-  y = y0;
-  p = 2 * dy - dx;
-  while (x < x1)
-  {
-    if (p >= 0)
-    {
-        glVertex2f(x, y);
-        y = y + 1;
-        p = p + 2 * dy - 2 * dx;
-    }
-    else
-    {
-        glVertex2f(x, y);
-        p = p + 2 * dy;
-    }
-    x = x + 1;
-  }
-  glEnd();
-  glFlush();
+#include <GL/glut.h>
+#include <stdio.h>
+#include <math.h>
+#include<cmath>
+using namespace std;
+
+void init() {
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(400, 400);
+    glutInitWindowPosition(0, 0);
+    glutCreateWindow("Line DDA");
+    glMatrixMode(GL_PROJECTION);
+    gluOrtho2D(0.0, 400.0, 0.0, 400.0);
 }
-void myinit()
-{
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glColor3f(0.0, 1.0, 0.0);
-  glPointSize(10.0);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0.0, 499.0, 0.0, 499.0);
+
+void display() {
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0, 0.0, 0.0);
+
+    //DDA Algo Begins
+    float x0, y0, x1, y1, dx, dy, xinc, yinc, steps;
+    glBegin(GL_POINTS);
+    x0 = 0;
+    y0 = 250;
+    x1 = 300;
+    y1 = 100;
+    // cin>>x0>>y0>>x1>>y1;
+    dx = x1 - x0;
+    dy = y1 - y0;
+    if (abs(dx) > abs(dy)) {
+        steps = abs(dx);
+    }
+    else {
+        steps = abs(dy);
+    }
+
+    xinc = dx / steps;
+    yinc = dy / steps;
+
+    for (int i = 1; i <= steps; ++i) {
+        glVertex2i(x0, y0);
+        x0 += xinc;
+        y0 += yinc;
+    }
+    //Algo ends//
+
+    glEnd();
+    glFlush();
 }
-void main(int argc, char** argv)
-{
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-  glutInitWindowSize(500, 500);
-  glutInitWindowPosition(0, 0);
-  glutCreateWindow("DDA");
-  glutDisplayFunc(display);
-  myinit();
-  glutMainLoop();
+
+int main(int argc, char** argv) {
+
+    // cin>>x0>>y0>>x1>>y1;
+    glutInit(&argc, argv);
+    init();
+    glutDisplayFunc(display);
+    glutMainLoop();
+    return 0;
 }
