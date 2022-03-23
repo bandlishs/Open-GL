@@ -1,88 +1,119 @@
-//Boundary Fill using OpenGL 
-#include <GL/glut.h>  
-#include<math.h>  
-#include<stdio.h>  
-int ww = 600, wh = 500;  
-float fillCol[3] = { 0.4,1.5,0.0 };  
-float borderCol[3] = { 0.0,0.0,0.0 };  
-void setPixel(int, int, float[]);  
-void getPixel(int, int, float[]);  
-void resize(int, int);  
-void drawPolygon(int, int, int, int);  
-void boundaryFill4(int, int, float[], float[]);  
-void display();  
-void mouse(int, int, int, int);  
-int main(int argc, char** argv)  
-{  
-  glutInit(&argc, argv);  
-  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);  
-  glutInitWindowSize(ww, wh);  
-  glutInitWindowPosition(500, 50);  
-  glutCreateWindow("boundary-Fill");  
-  glutDisplayFunc(display);  
-  glutMouseFunc(mouse);  
-  //calls whenever frame buffer window is resized  
-  glutReshapeFunc(resize);  
-  glutMainLoop();  
-  return 0;  
-}  
-void setPixel(int pointx, int pointy, float f[3])  
-{  
-  glBegin(GL_POINTS);  
-  glColor3fv(f);  
-  glVertex2i(pointx, pointy);  
-  glEnd();  
-  glFlush();  
-}  
-void getPixel(int x, int y, float pixels[3])  
-{  
-  glReadPixels(x, y, 1.0, 1.0, GL_RGB, GL_FLOAT, pixels);  
-}  
-void resize(int w, int h)  
-{  
-  glMatrixMode(GL_PROJECTION); //set projection parameters  glLoadIdentity();  
-  gluOrtho2D(0.0, w, 0.0, h);  
-  glutReshapeWindow(ww, wh);  
-  glViewport(0.0, 0.0, w, h); 
-}  
-void drawPolygon(int x1, int y1, int x2, int y2)  
-{  
-  glColor3f(0.0, 0.0, 0.0);  
-  glBegin(GL_LINE_LOOP);  
-  glVertex2i(x1, y1);  
-  glVertex2i(x1, y2);  
-  glVertex2i(x2, y2);  
-  glVertex2i(x2, y1);  
-  glEnd();  
-  glFlush();  
-}  
-void display()  
-{  
-  glClearColor(1.0, 1.0, 1.0, 1.0);  
-  glClear(GL_COLOR_BUFFER_BIT);  
-  //If you modify following values, u should change condition in mouse() also.  drawPolygon(150, 250, 200, 300);  
-  glFlush();  
-} 
-void boundaryFill4(int x, int y, float fillColor[3], float borderColor[3]) { 
-float interiorColor[3]; 
-getPixel(x, y, interiorColor); 
-if (((interiorColor[0] != borderColor[0] && (interiorColor[1]) != borderColor[1] && (interiorColor[2]) != borderColor[2]) && (interiorColor[0] != fillColor[0] && (interiorColor[1]) != fillColor[1] && (interiorColor[2]) != fillColor[2]))) 
-{ 
-  setPixel(x, y, fillColor); 
-  boundaryFill4(x + 1, y, fillColor, borderColor); 
-  boundaryFill4(x - 1, y, fillColor, borderColor); 
-  boundaryFill4(x, y + 1, fillColor, borderColor); 
-  boundaryFill4(x, y - 1, fillColor, borderColor); 
-} 
-} 
-void mouse(int btn, int state, int x, int y) 
-  { 
-  //This check is based on size of the polygon mentioned in display() function if (((x < 150 || x>200) || (y < 200 || y>250))) 
-  printf("Invalid click !!\n"); 
-  else 
-  if (btn == GLUT_LEFT_BUTTON && state == GLUT_DOWN) { 
-  int xi = x; 
-  int yi = (wh - y); 
-  boundaryFill4(xi, yi, fillCol, borderCol); 
-  } 
+#include "./freeglut-3.2.1/include/GL/freeglut.h"
+
+#include<iostream>
+#include<vector>
+using namespace std;
+float r = 100;
+
+void init()
+{
+    glClearColor(1.0, 1.0, 1.0, 0.0);
+    glColor3f(0.0, 0.0, 0.0);
+    gluOrtho2D(0.0, 640.0, 0.0, 480.0);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glPointSize(1.0f);
+}
+
+struct Color {
+    GLfloat r;
+    GLfloat g;
+    GLfloat b;
+};
+
+void plotcircle(int x, int y) {
+    glBegin(GL_POINTS);
+    glVertex2f(x + 100, y + 100);
+    glVertex2f(-x + 100, y + 100);
+    glVertex2f(x + 100, -y + 100);
+    glVertex2f(-x + 100, -y + 100);
+
+    glVertex2f(y + 100, x + 100);
+    glVertex2f(-y + 100, x + 100);
+    glVertex2f(y + 100, -x + 100);
+    glVertex2f(-y + 100, -x + 100);
+    glEnd();
+}
+
+Color getpixel(GLint x, GLint y) {
+    Color color;
+    glReadPixels(x, y, 1, 1, GL_RGB, GL_FLOAT, &color);
+    return color;
+}
+
+void setpixel(GLint x, GLint y, Color color) {
+    glColor3f(color.r, color.g, color.b);
+    glBegin(GL_POINTS);
+    glVertex2f(x, y);
+    glEnd();
+    glFlush();
+}
+
+void boundaryfill(GLint x, GLint y, Color bcolor, Color fcolor) {
+    Color ccolor = getpixel(x, y);
+    if (ccolor.r != bcolor.r &&
+        ccolor.g != bcolor.g &&
+        ccolor.b != bcolor.b) {
+        setpixel(x, y, fcolor);
+        boundaryfill(x + 1, y, bcolor, fcolor);
+        // boundaryfill(x+1,y+1,bcolor,fcolor);
+        boundaryfill(x, y + 1, bcolor, fcolor);
+        // boundaryfill(x-1,y+1,bcolor,fcolor);
+        boundaryfill(x - 1, y, bcolor, fcolor);
+        // boundaryfill(x+1,y-1,bcolor,fcolor);
+        boundaryfill(x, y - 1, bcolor, fcolor);
+        // boundaryfill(x-1,y-1,bcolor,fcolor);
+    }
+}
+
+
+void display()
+{
+    // Used to initialise display
+    glClear(GL_COLOR_BUFFER_BIT);
+    // glColor3f(0.0,0.0,0.0);
+    // glPointSize(4.0);
+
+    //initial decision parameter P0 = 1-r
+    int p = 3 - 2 * r;
+    int x = 0;
+    int y = r;
+
+    while (x < y) {
+        if (p < 0) {
+            plotcircle(x, y);
+            p = p + 4 * x + 6;
+            x = x + 1;
+            y = y;
+        }
+        else {
+            plotcircle(x, y);
+            p = p + 4 * x - 4 * y + 10;
+            x = x + 1;
+            y = y - 1;
+        }
+    }
+    glEnd();
+    glFlush();
+
+    Color fillcolor = { 0.0f,0.0f,1.0f };
+    Color boundary = { 0.0f,0.0f,0.0f };
+
+    // motion(100,150);
+    boundaryfill(101, 101, boundary, fillcolor);
+    glEnd();
+}
+
+
+int main(int argc, char** argv)
+{
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    // glutInitWindowPosition(50,100);
+    glutInitWindowSize(640, 480);
+    glutInitWindowPosition(200, 200);
+    glutCreateWindow("Circle Plotting using midpoint Algo");
+    init();
+    glutDisplayFunc(display);
+    glutMainLoop();
 }
